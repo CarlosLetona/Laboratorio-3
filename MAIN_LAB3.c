@@ -1,3 +1,16 @@
+/*la libreria de lcd la hice con ayuda de esto links:
+ * https://electrosome.com/lcd-pic-mplab-xc8/
+ * https://forum.arduino.cc/index.php?topic=502468.0
+ * https://deepbluembedded.com/interfacing-16x2-lcd-with-pic-microcontrollers-mplab-xc8/
+ * https://social.msdn.microsoft.com/Forums/es-ES/52c33e42-da42-405a-8523-0183c8be945e/convertir-en-binario-a-hex-y-decimal?forum=vcses
+ * y principalmente:
+ * https://www.youtube.com/watch?v=RgTMbQ6lssI
+ * Del video me base, haciendo los cambios respectivos para lograr que la lcd funcione a 8 bits
+ * Para mandar los valores de las variables a la lcd use estos links
+ * https://www.geeksforgeeks.org/sprintf-in-c/
+ * https://electrosome.com/lcd-pic-mplab-xc8/
+ */
+
 #pragma config FOSC = INTRC_CLKOUT// Oscillator Selection bits (INTOSC oscillator: CLKOUT function on RA6/OSC2/CLKOUT pin, I/O function on RA7/OSC1/CLKIN)
 #pragma config WDTE = OFF       // Watchdog Timer Enable bit (WDT disabled and can be enabled by SWDTEN bit of the WDTCON register)
 #pragma config PWRTE = OFF      // Power-up Timer Enable bit (PWRT disabled)
@@ -26,23 +39,42 @@
 #include "ADC_H.h"
 #include "Transmicion.h"
 #include "Recepcion.h"
+#include "LCD.h"
 
 void configuracion(void);
 
-uint8_t valor_adc1 = 3;
-uint8_t valor_adc2 = 5;
+char s[50]; 
+char g[50];
+char h[50];
+
 uint8_t valor_recibido;
 uint8_t bandera = 1;
+uint8_t turno = 1;
 uint8_t contador = 0;
+
+uint8_t potenciometro_1 = 0b01010101;
+uint8_t potenciometro_2 = 0b01011001;
+uint8_t valor_pot1 = 0;
+uint8_t valor_pot2 = 0;
 
 void main(void) {
     configuracion();
     config_transimicion();
     config_recepcion();
     while(1){
-        config_adc(bandera);
-        transmicion(valor_adc1, valor_adc2);
-        PORTD = contador;
+        bandera = config_adc(bandera,potenciometro_1,potenciometro_2,turno);
+        transmicion(valor_pot1, valor_pot2);
+        sprintf(s, "%d", valor_pot1);
+        lcd_goto(1, 2);//posicion 0 en x y 2 fila
+        lcd_print(s);
+        sprintf(s, "%d", valor_pot2);
+        lcd_goto(6, 2);//posicion 0 en x y 2 fila
+        lcd_print(s);
+        sprintf(s, "%d", contador);
+        lcd_goto(12, 2);//posicion 0 en x y 2 fila
+        lcd_print(s);
+        
+        
         if (valor_recibido == 0x2B){
             valor_recibido = 0;
             contador++;
@@ -61,6 +93,21 @@ void __interrupt() ISR(void){
     }else{
         valor_recibido = RCREG;
     }
+    }if(PIR1bits.ADIF == 1){
+        if(turno == 1){
+            bandera = 1; 
+            turno = 2;
+            valor_pot1 = ADRESH;
+            ADRESH = 0;
+  
+
+        }else if(turno == 2){
+            bandera = 1;
+            turno = 1;
+            valor_pot2 = ADRESH;
+            ADRESH = 0;
+            }
+    PIR1bits.ADIF = 0; //limpio la bandera
   }  
 }
 
@@ -69,4 +116,16 @@ void configuracion(void){
     PORTD = 0;
     TRISC = 0b10000000; //Rx como entrada, y tx como salida
     PORTC = 0;
+    //ADCON0 = 0b01010101;//RE0(AN5)habilito el adc
+    //ADCON0 = 0b01011000;// RE1(AN6)  
+    TRISE =  0b00000011;//RE0 y RE1 entrada
+    ANSEL =  0b01100000;//AN5 como analógico
+    INTCON	 = 0b11101000;//GIE,PEIE, T0IE, RBIE ACTIVAS
+    PIR1bits.ADIF = 0;//estara en 1 cuando la conversión se complete
+    PIE1bits.ADIE = 1;//habilito la interrupcion de adc
+    ADCON1bits.ADFM = 0; //justificado a la izquierda
+    lcd_init();
+    lcd_cursor_home();
+    lcd_clear_display();
+    lcd_print("V1   V2   Cont");
 }

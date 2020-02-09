@@ -7,7 +7,7 @@
 #include <xc.h> // include processor files - each processor file is guarded.  
 #include <stdint.h>
 
-void config_adc(uint8_t bandera);
+uint8_t config_adc(uint8_t bandera, uint8_t pot_1,uint8_t pot2,uint8_t turno);
 
 #endif
 
