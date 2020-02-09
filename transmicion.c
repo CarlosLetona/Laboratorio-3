@@ -14,7 +14,7 @@ void config_transimicion(void){
 }
 void transmicion (uint8_t valor1, uint8_t valor2){ //citado de diego equite
     INTCONbits.GIE = 1;
-    TXREG=valor1;
+    TXREG = valor1;
     while(TRMT == 0){}
     TXREG = valor2;
     while(TRMT == 0){ }

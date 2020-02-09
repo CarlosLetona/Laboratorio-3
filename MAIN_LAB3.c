@@ -42,30 +42,33 @@
 #include "LCD.h"
 
 void configuracion(void);
-
 char s[50]; 
-char g[50];
-char h[50];
 
 uint8_t valor_recibido;
 uint8_t bandera = 1;
 uint8_t turno = 1;
 uint8_t contador = 0;
 
-uint8_t potenciometro_1 = 0b01010101;
-uint8_t potenciometro_2 = 0b01011001;
+uint8_t potenciometro_1 = 0b01010101;//RE0(AN5)habilito el adc
+uint8_t potenciometro_2 = 0b01011001;// RE1(AN6) 
 uint8_t valor_pot1 = 0;
 uint8_t valor_pot2 = 0;
+
 
 void main(void) {
     configuracion();
     config_transimicion();
     config_recepcion();
+    lcd_init();
+    lcd_cursor_home();
+    lcd_clear_display();
+    lcd_print("V1   V2   Cont");
+    config_adc();
     while(1){
-        bandera = config_adc(bandera,potenciometro_1,potenciometro_2,turno);
+        bandera = turnos_adc(bandera,potenciometro_1,potenciometro_2,turno);
         transmicion(valor_pot1, valor_pot2);
         sprintf(s, "%d", valor_pot1);
-        lcd_goto(1, 2);//posicion 0 en x y 2 fila
+        lcd_goto(0, 2);//posicion 0 en x y 2 fila
         lcd_print(s);
         sprintf(s, "%d", valor_pot2);
         lcd_goto(6, 2);//posicion 0 en x y 2 fila
@@ -73,8 +76,13 @@ void main(void) {
         sprintf(s, "%d", contador);
         lcd_goto(12, 2);//posicion 0 en x y 2 fila
         lcd_print(s);
-        
-        
+        if (valor_pot1 < 0x64){
+            lcd_goto(2, 2);//posicion 0 en x y 2 fila
+            lcd_dato(0x80);
+        }else if(valor_pot2 < 0x64){
+            lcd_goto(8, 2);//posicion 0 en x y 2 fila
+            lcd_dato(0x80);
+        }
         if (valor_recibido == 0x2B){
             valor_recibido = 0;
             contador++;
@@ -100,7 +108,6 @@ void __interrupt() ISR(void){
             valor_pot1 = ADRESH;
             ADRESH = 0;
   
-
         }else if(turno == 2){
             bandera = 1;
             turno = 1;
@@ -116,16 +123,7 @@ void configuracion(void){
     PORTD = 0;
     TRISC = 0b10000000; //Rx como entrada, y tx como salida
     PORTC = 0;
-    //ADCON0 = 0b01010101;//RE0(AN5)habilito el adc
-    //ADCON0 = 0b01011000;// RE1(AN6)  
+
     TRISE =  0b00000011;//RE0 y RE1 entrada
     ANSEL =  0b01100000;//AN5 como analógico
-    INTCON	 = 0b11101000;//GIE,PEIE, T0IE, RBIE ACTIVAS
-    PIR1bits.ADIF = 0;//estara en 1 cuando la conversión se complete
-    PIE1bits.ADIE = 1;//habilito la interrupcion de adc
-    ADCON1bits.ADFM = 0; //justificado a la izquierda
-    lcd_init();
-    lcd_cursor_home();
-    lcd_clear_display();
-    lcd_print("V1   V2   Cont");
 }

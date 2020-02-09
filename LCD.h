@@ -107,9 +107,3 @@ void lcd_put_caracter(char adress, char caracter[]){
         lcd_dato(caracter[i]);
     }
 }
-void lcd_time_control(){//rutina para generar un pulso en Enable
-    EN = 1;
-    __delay_us(5);
-    EN = 0;
-    __delay_us(5);
-}
