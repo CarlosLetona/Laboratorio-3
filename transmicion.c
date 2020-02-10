@@ -18,6 +18,4 @@ void transmicion (uint8_t valor1, uint8_t valor2){ //citado de diego equite
     while(TRMT == 0){}
     TXREG = valor2;
     while(TRMT == 0){ }
-
-    
 }

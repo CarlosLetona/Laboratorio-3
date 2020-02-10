@@ -42,18 +42,21 @@
 #include "LCD.h"
 
 void configuracion(void);
+float conversion(uint8_t valor_pot);
 char s[50]; 
 
 uint8_t valor_recibido;
 uint8_t bandera = 1;
 uint8_t turno = 1;
-uint8_t contador = 0;
+uint8_t contador = 10;
 
 uint8_t potenciometro_1 = 0b01010101;//RE0(AN5)habilito el adc
 uint8_t potenciometro_2 = 0b01011001;// RE1(AN6) 
 uint8_t valor_pot1 = 0;
 uint8_t valor_pot2 = 0;
-
+float valor1_f;
+float valor2_f;
+float a;
 
 void main(void) {
     configuracion();
@@ -62,30 +65,26 @@ void main(void) {
     lcd_init();
     lcd_cursor_home();
     lcd_clear_display();
-    lcd_print("V1   V2   Cont");
+    lcd_print("V1    V2    Cont");
     config_adc();
     while(1){
         bandera = turnos_adc(bandera,potenciometro_1,potenciometro_2,turno);
         transmicion(valor_pot1, valor_pot2);
-        sprintf(s, "%d", valor_pot1);
+        valor1_f = conversion(valor_pot1);
+        valor2_f = conversion(valor_pot2);
+        sprintf(s, "%3.2f", valor1_f);
         lcd_goto(0, 2);//posicion 0 en x y 2 fila
         lcd_print(s);
-        sprintf(s, "%d", valor_pot2);
-        lcd_goto(6, 2);//posicion 0 en x y 2 fila
+        sprintf(s, "%3.2f", valor2_f);
+        lcd_goto(6, 2);//posicion 6 en x y 2 fila
         lcd_print(s);
         sprintf(s, "%d", contador);
-        lcd_goto(12, 2);//posicion 0 en x y 2 fila
+        lcd_goto(13, 2);//posicion 14 en x y 2 fila
         lcd_print(s);
-        if (valor_pot1 < 0x64){
-            lcd_goto(2, 2);//posicion 0 en x y 2 fila
-            lcd_dato(0x80);
-        }else if(valor_pot2 < 0x64){
-            lcd_goto(8, 2);//posicion 0 en x y 2 fila
-            lcd_dato(0x80);
-        }
         if (valor_recibido == 0x2B){
             valor_recibido = 0;
             contador++;
+           
         }else if(valor_recibido == 0x2D){
             valor_recibido = 0;
             contador--;
@@ -123,7 +122,10 @@ void configuracion(void){
     PORTD = 0;
     TRISC = 0b10000000; //Rx como entrada, y tx como salida
     PORTC = 0;
-
     TRISE =  0b00000011;//RE0 y RE1 entrada
     ANSEL =  0b01100000;//AN5 como analógico
+}
+float conversion(uint8_t valor_pot){
+     a = 0.0196 * (float)valor_pot;
+    return (a);
 }
