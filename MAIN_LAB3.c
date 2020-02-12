@@ -33,7 +33,6 @@
 #define _XTAL_FREQ 4000000
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdint.h>
 #include <pic16f887.h>
 #include "ADC_H.h"
@@ -69,13 +68,15 @@ void main(void) {
     config_adc();
     while(1){
         bandera = turnos_adc(bandera,potenciometro_1,potenciometro_2,turno);
-        transmicion(valor_pot1, valor_pot2);
+        
         valor1_f = conversion(valor_pot1);
         valor2_f = conversion(valor_pot2);
         sprintf(s, "%3.2f", valor1_f);
+        transmicion(s);
         lcd_goto(0, 2);//posicion 0 en x y 2 fila
         lcd_print(s);
         sprintf(s, "%3.2f", valor2_f);
+        transmicion(s);
         lcd_goto(6, 2);//posicion 6 en x y 2 fila
         lcd_print(s);
         sprintf(s, "%d", contador);

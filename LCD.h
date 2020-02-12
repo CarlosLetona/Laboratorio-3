@@ -73,7 +73,7 @@ void lcd_print(char *dato){
         lcd_dato(*dato);
         dato++;
     }
-}
+}/*
 void lcd_print_with_position(int x, int y, char *dato){
     char posicion;
     switch(y){
@@ -87,7 +87,7 @@ void lcd_print_with_position(int x, int y, char *dato){
     }
     lcd_control(posicion);
     lcd_print(dato);
-}
+}*/
 void lcd_goto(char x, char y){
     char posicion;
     switch(y){
@@ -100,10 +100,11 @@ void lcd_goto(char x, char y){
     }
     lcd_control(posicion);
 }
+/*
 void lcd_put_caracter(char adress, char caracter[]){
     int i;
     lcd_control(0x40 + (adress * 8));
     for(i = 0; i<8; i++){
         lcd_dato(caracter[i]);
     }
-}
+}*/
